@@ -1,8 +1,12 @@
 package zxcvbn
 
 import (
+	"fmt"
 	"math"
 	"testing"
+
+	"github.com/registrobr/zxcvbn-go/match"
+	"github.com/registrobr/zxcvbn-go/scoring"
 )
 
 /**
@@ -52,6 +56,75 @@ func TestPasswordStrength(t *testing.T) {
 	runTest(t, "eheuczkqyq", float64(42.813))
 	runTest(t, "rWibMFACxAUGZmxhVncy", float64(104.551))
 	runTest(t, "Ba9ZyWABu99[BK#6MBgbH88Tofv)vs$", float64(161.278))
+}
+
+func TestPortugueseData(t *testing.T) {
+
+	data := []struct {
+		description      string
+		password         string
+		expectedResponse scoring.MinEntropyMatch
+	}{
+		{
+			description: "common word",
+			password:    "fazendo",
+			expectedResponse: scoring.MinEntropyMatch{
+				Password: "fazendo",
+				Entropy:  7.18,
+				MatchSequence: []match.Match{
+					{Pattern: "dictionary", I: 0, J: 6, Token: "fazendo", DictionaryName: "CommonWords_ptbr", Entropy: 7.1799090900149345},
+				},
+			},
+		},
+		{
+			description: "firstnames",
+			password:    "riquelme",
+			expectedResponse: scoring.MinEntropyMatch{
+				Password: "riquelme",
+				Entropy:  8.358,
+				MatchSequence: []match.Match{
+					{Pattern: "dictionary", I: 0, J: 7, Token: "riquelme", DictionaryName: "FirstNames_ptbr", Entropy: 8.357552004618084},
+				},
+			},
+		},
+		{
+			description: "lastnames",
+			password:    "alvarenga",
+			expectedResponse: scoring.MinEntropyMatch{
+				Password: "alvarenga",
+				Entropy:  3.17,
+				MatchSequence: []match.Match{
+					{Pattern: "dictionary", I: 0, J: 8, Token: "alvarenga", DictionaryName: "LastNames_ptbr", Entropy: 3.1699250014423126},
+				},
+			},
+		},
+		{
+			description: "wikipedia",
+			password:    "valentiniano",
+			expectedResponse: scoring.MinEntropyMatch{
+				Password: "valentiniano",
+				Entropy:  14.855,
+				MatchSequence: []match.Match{
+					{Pattern: "dictionary", I: 0, J: 11, Token: "valentiniano", DictionaryName: "Wikipedia_ptbr", Entropy: 14.85511179803766},
+				},
+			},
+		},
+	}
+
+	for i, scenario := range data {
+		println(i, scenario.description)
+
+		result := PasswordStrength(scenario.password, nil)
+
+		println(fmt.Sprintf(
+			"match response: %+v \n", result))
+
+		if result.Entropy != scenario.expectedResponse.Entropy {
+			t.Logf("expected response: [%+v] result: [%+v]", scenario.expectedResponse, result)
+			t.Fail()
+		}
+
+	}
 }
 
 var formatString = "%s : error should be less than %.2f Acctual error: %.4f Expected entropy %.4f Actual entropy %.4f \n"
